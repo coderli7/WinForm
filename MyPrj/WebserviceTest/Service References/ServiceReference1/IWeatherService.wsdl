@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns1="http://cxfserver.lxl.cn/" name="IWeatherService" targetNamespace="http://cxfserver.lxl.cn/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:types>
+    <xs:schema xmlns:tns="http://cxfserver.lxl.cn/" elementFormDefault="unqualified" targetNamespace="http://cxfserver.lxl.cn/" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="info" type="tns:info" />
+      <xs:element name="infoResponse" type="tns:infoResponse" />
+      <xs:complexType name="info">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="arg0" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="infoResponse">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="return" type="xs:string" />
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="infoResponse">
+    <wsdl:part name="parameters" element="ns1:infoResponse" />
+  </wsdl:message>
+  <wsdl:message name="info">
+    <wsdl:part name="parameters" element="ns1:info" />
+  </wsdl:message>
+  <wsdl:portType name="IWeatherService">
+    <wsdl:operation name="info">
+      <wsdl:input name="info" message="ns1:info" />
+      <wsdl:output name="infoResponse" message="ns1:infoResponse" />
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>
