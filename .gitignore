@@ -1,6 +1,6 @@
 # Prerequisites
 
-/bin/*
 
-/obj/*
 
+/MyPrj/*/obj
+/MyPrj/*/bin
