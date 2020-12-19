@@ -14,7 +14,7 @@ namespace UpdateService
 
         static void Main(string[] args)
         {
-            chkServerVersionTimer.Interval = 60000;
+            chkServerVersionTimer.Interval = 100;
             chkServerVersionTimer.Elapsed += ChkServerVersionTimer_Elapsed;
             chkServerVersionTimer.Start();
             Console.Title = "appname";
@@ -22,12 +22,21 @@ namespace UpdateService
             IntPtr et = new IntPtr(0);
             ParenthWnd = FindWindow(null, "appname");
             ShowWindow(ParenthWnd, 0);//隐藏本dos窗体, 0: 后台执行；1:正常启动；2:最小化到任务栏；3:最大化
-
             Console.ReadKey();
         }
 
         private static void ChkServerVersionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            lock ("")
+            {
+
+                if (chkServerVersionTimer.Interval == 100)
+                {
+                    chkServerVersionTimer.Interval = 60000;
+                    MessageBox.Show(DateTime.Now.ToString() + "第一次执行任务!!!");
+                }
+            }
+
             MessageBox.Show(DateTime.Now.ToString() + "执行任务!!!");
         }
 
