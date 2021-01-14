@@ -35,9 +35,9 @@
             this.usernameTxt = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.chkPwd = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.logTxt = new System.Windows.Forms.RichTextBox();
-            this.chkPwd = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -46,9 +46,9 @@
             // startProxyButton
             // 
             this.startProxyButton.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.startProxyButton.Location = new System.Drawing.Point(84, 101);
+            this.startProxyButton.Location = new System.Drawing.Point(80, 101);
             this.startProxyButton.Name = "startProxyButton";
-            this.startProxyButton.Size = new System.Drawing.Size(160, 66);
+            this.startProxyButton.Size = new System.Drawing.Size(162, 66);
             this.startProxyButton.TabIndex = 0;
             this.startProxyButton.Text = "启动代理";
             this.startProxyButton.UseVisualStyleBackColor = true;
@@ -57,9 +57,9 @@
             // closeProxyButton
             // 
             this.closeProxyButton.Font = new System.Drawing.Font("宋体", 15F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.closeProxyButton.Location = new System.Drawing.Point(263, 101);
+            this.closeProxyButton.Location = new System.Drawing.Point(249, 101);
             this.closeProxyButton.Name = "closeProxyButton";
-            this.closeProxyButton.Size = new System.Drawing.Size(148, 66);
+            this.closeProxyButton.Size = new System.Drawing.Size(162, 66);
             this.closeProxyButton.TabIndex = 1;
             this.closeProxyButton.Text = "关闭代理";
             this.closeProxyButton.UseVisualStyleBackColor = true;
@@ -106,6 +106,17 @@
             this.tabPage1.Text = "代理工具";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // chkPwd
+            // 
+            this.chkPwd.AutoSize = true;
+            this.chkPwd.Location = new System.Drawing.Point(84, 73);
+            this.chkPwd.Name = "chkPwd";
+            this.chkPwd.Size = new System.Drawing.Size(72, 16);
+            this.chkPwd.TabIndex = 4;
+            this.chkPwd.Text = "记住工号";
+            this.chkPwd.UseVisualStyleBackColor = true;
+            this.chkPwd.CheckedChanged += new System.EventHandler(this.chkPwd_CheckedChanged);
+            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.logTxt);
@@ -126,17 +137,6 @@
             this.logTxt.Size = new System.Drawing.Size(438, 208);
             this.logTxt.TabIndex = 0;
             this.logTxt.Text = "";
-            // 
-            // chkPwd
-            // 
-            this.chkPwd.AutoSize = true;
-            this.chkPwd.Location = new System.Drawing.Point(84, 73);
-            this.chkPwd.Name = "chkPwd";
-            this.chkPwd.Size = new System.Drawing.Size(72, 16);
-            this.chkPwd.TabIndex = 4;
-            this.chkPwd.Text = "记住工号";
-            this.chkPwd.UseVisualStyleBackColor = true;
-            this.chkPwd.CheckedChanged += new System.EventHandler(this.chkPwd_CheckedChanged);
             // 
             // ChinaLifeForm
             // 

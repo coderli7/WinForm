@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChinaLifeTools.models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,7 @@ namespace ChinaLifeTools
     {
         public FiddlerCacheInfo(String cookieInfo)
         {
+            #region 1.初始化cookie信息
             this.CookieStr = cookieInfo;
             var cookieItems = cookieInfo.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
             CookieDic = new Dictionary<string, string>();
@@ -21,8 +23,8 @@ namespace ChinaLifeTools
                     this.CookieDic.Add(cookieItemArr[0], cookieItemArr[1]);
                 }
             }
+            #endregion
         }
-
 
         public String CookieStr { get; set; }
 

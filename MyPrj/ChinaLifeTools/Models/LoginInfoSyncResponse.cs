@@ -17,5 +17,8 @@ namespace ChinaLifeTools.models
 
         public Object message { get; set; }
 
+        public String proxyUrl { get; set; }
+
     }
+
 }
