@@ -1,0 +1,8 @@
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.csproj.CoreCompileInputs.cache
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\bin\Debug\Common.Utils.dll
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\bin\Debug\Common.Utils.pdb
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\bin\Debug\Ionic.Zip.dll
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.csprojAssemblyReference.cache
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.csproj.CopyComplete
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.dll
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.pdb

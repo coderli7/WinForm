@@ -33,11 +33,9 @@ namespace UpdateService
                 if (chkServerVersionTimer.Interval == 100)
                 {
                     chkServerVersionTimer.Interval = 60000;
-                    MessageBox.Show(DateTime.Now.ToString() + "第一次执行任务!!!");
+                    //MessageBox.Show(DateTime.Now.ToString() + "第一次执行任务!!!");
                 }
             }
-
-            MessageBox.Show(DateTime.Now.ToString() + "执行任务!!!");
         }
 
         #region 隐藏窗口

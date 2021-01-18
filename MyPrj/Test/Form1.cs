@@ -8,6 +8,7 @@ using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using VerifyReader;
 
 namespace Test
 {
@@ -20,11 +21,9 @@ namespace Test
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
-            int memSize = GetPhisicalMemory();
-
+            //int memSize = GetPhisicalMemory();
+            //double freeMemSize = GerFreePhisicalMemory();
         }
-
 
 
         /// <summary>
@@ -63,6 +62,28 @@ namespace Test
             {
             }
             return phyMemSize;
+        }
+
+
+        private double GerFreePhisicalMemory()
+        {
+            double freeMemSize = 0;
+            try
+            {
+                ManagementClass mos = new ManagementClass("Win32_OperatingSystem");
+                foreach (ManagementObject mo in mos.GetInstances())
+                {
+                    if (mo["FreePhysicalMemory"] != null)
+                    {
+                        freeMemSize = double.Parse(mo["FreePhysicalMemory"].ToString()) / (1024 * 1024 * 1.0);
+                        freeMemSize = Math.Round(freeMemSize, 2);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return freeMemSize;
         }
     }
 }

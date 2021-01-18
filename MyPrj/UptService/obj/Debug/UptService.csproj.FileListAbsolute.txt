@@ -1,0 +1,15 @@
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\UptService.exe.config
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\UptService.exe
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\UptService.pdb
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.Properties.Resources.resources
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.csproj.GenerateResource.cache
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.csproj.CoreCompileInputs.cache
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.exe
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.pdb
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.csprojAssemblyReference.cache
+D:\01.GitHub\WinForm\MyPrj\UptService\obj\Debug\UptService.csproj.CopyComplete
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\Common.Models.dll
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\Common.Models.pdb
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\Common.Utils.dll
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\Common.Utils.pdb
+D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug\Newtonsoft.Json.dll

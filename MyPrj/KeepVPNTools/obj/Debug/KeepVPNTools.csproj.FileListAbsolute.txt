@@ -1,0 +1,10 @@
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\bin\Debug\KeepVPNTools.exe.config
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\bin\Debug\KeepVPNTools.exe
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\bin\Debug\KeepVPNTools.pdb
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.KeepVPNForm.resources
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.Properties.Resources.resources
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.csproj.GenerateResource.cache
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.csproj.CoreCompileInputs.cache
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.exe
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.pdb
+D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.csprojAssemblyReference.cache
