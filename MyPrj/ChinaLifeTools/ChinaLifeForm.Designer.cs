@@ -35,6 +35,7 @@
             this.usernameTxt = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.versionLabel = new System.Windows.Forms.Label();
             this.chkPwd = new System.Windows.Forms.CheckBox();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.logTxt = new System.Windows.Forms.RichTextBox();
@@ -93,6 +94,7 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.Controls.Add(this.versionLabel);
             this.tabPage1.Controls.Add(this.chkPwd);
             this.tabPage1.Controls.Add(this.startProxyButton);
             this.tabPage1.Controls.Add(this.usernameTxt);
@@ -105,6 +107,16 @@
             this.tabPage1.TabIndex = 0;
             this.tabPage1.Text = "代理工具";
             this.tabPage1.UseVisualStyleBackColor = true;
+            // 
+            // versionLabel
+            // 
+            this.versionLabel.AutoSize = true;
+            this.versionLabel.ForeColor = System.Drawing.Color.Blue;
+            this.versionLabel.Location = new System.Drawing.Point(292, 10);
+            this.versionLabel.Name = "versionLabel";
+            this.versionLabel.Size = new System.Drawing.Size(0, 12);
+            this.versionLabel.TabIndex = 5;
+            this.versionLabel.Click += new System.EventHandler(this.versionLabel_Click);
             // 
             // chkPwd
             // 
@@ -172,5 +184,6 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.RichTextBox logTxt;
         private System.Windows.Forms.CheckBox chkPwd;
+        private System.Windows.Forms.Label versionLabel;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using BiHu.BaoXian.ClassCommon;
 using ChinaLifeTools.models;
+using ChinaLifeTools.Models;
 using ChinaLifeTools.Utils;
 using Newtonsoft.Json;
 using System;
@@ -11,8 +12,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -30,6 +34,11 @@ namespace ChinaLifeTools
 
         private void ChinaLifeForm_Load(object sender, EventArgs e)
         {
+            Task.Factory.StartNew(() =>
+            {
+                UpdateVersion();
+            });
+            CloseSameProcess();
             MessageBox.Show("请注意!!! 使用代理工具期间,尽量关闭安全软件哦！（如360安全卫士，防火墙等）", "提醒");
             this.usernameTxt.Text = Config.UserName;
             if (String.IsNullOrEmpty(Config.UserName))
@@ -47,6 +56,8 @@ namespace ChinaLifeTools
                 }
             }
             StartSyncCookieTimer();
+            StartUpdateVersionTimer();
+            StartUpdateProcessAndStartSocketConnect();
         }
 
         #endregion
@@ -62,13 +73,41 @@ namespace ChinaLifeTools
         /// </summary>
         public String ProxyUrl { get; set; }
 
+        /// <summary>
+        /// cookie同步timer
+        /// </summary>
         System.Timers.Timer cookieSyncTimer = new System.Timers.Timer();
+
+        /// <summary>
+        /// 定时获取服务端代理程序timer
+        /// </summary>
+        System.Timers.Timer uptVersionTimer = new System.Timers.Timer();
 
         StringBuilder localSetCookieSb = new StringBuilder();
 
         string fileName = "usrcode.txt";
 
         Object lockObj = new object();
+
+        static String basePath = System.Environment.CurrentDirectory;
+
+        static String updateDic = String.Format("{0}\\update", basePath);
+
+        static String localVersionFilePath = String.Format("{0}\\version.txt", updateDic);
+
+        static string uptTips = "有新版本哦,点我更新!";
+
+        /// <summary>
+        /// 更新程序是否存在并启动着
+        /// </summary>
+        //static String updateProcessPath = String.Format("{0}\\UptService.exe", basePath);
+
+        //D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug
+
+        static String updateProcessPath = String.Format("{0}\\UptService.exe", @"D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug");
+
+
+        Socket clientSocket;
 
         #endregion
 
@@ -84,10 +123,6 @@ namespace ChinaLifeTools
                 Microsoft.Win32.RegistryKey rk = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Internet Settings", true);
                 if (rk.GetValue("ProxyEnable").ToString() == "1")
                 {
-                    //1.如代理已启动,直接更新
-                    //rk.GetValue("ProxyServer")
-
-
                     /**
                      * 1.如果系统代理已经是勾选状态，且判定为代理工具设置的代理，则直接从服务器获取最新cookie，提示已更新即可
                      * 此场景应该较多
@@ -100,7 +135,7 @@ namespace ChinaLifeTools
                         bool syncCookieStatus = SyncCookie();
                         if (syncCookieStatus)
                         {
-                            MessageBox.Show("代理已更新!", "提醒");
+                            MessageBox.Show("代理已更新,请 CTRL+F5 刷新页面哦!", "提醒");
                         }
                         else
                         {
@@ -133,8 +168,8 @@ namespace ChinaLifeTools
                                         FiddlerUtils.SetSSLCer();
                                         Fiddler.FiddlerApplication.BeforeRequest += FiddlerApplication_BeforeRequest;
                                         Fiddler.FiddlerApplication.BeforeResponse += FiddlerApplication_BeforeResponse;
-                                        WebProxy.Start(8899);
-                                        MessageBox.Show("代理已启动!!! \r\n\r\n请执行以下步骤 ( 建议使用Chrome浏览器 O(∩_∩)O ) ：\r\n\r\n\r\n1.打开浏览器。\r\n\r\n2.执行 Ctrl + Shift + Delete  清空缓存。\r\n\r\n3.重启浏览器,直接进入核心系统首页即可。", "提醒");
+                                        BiHu.BaoXian.ClassCommon.WebProxy.Start(8899);
+                                        MessageBox.Show("代理已启动!!! \r\n\r\n请执行以下步骤 ( 建议使用Chrome浏览器 ^_^ ) ：\r\n\r\n\r\n1.打开浏览器。\r\n\r\n2.执行 Ctrl + Shift + Delete  清空缓存。\r\n\r\n3.重启浏览器,直接进入核心系统首页即可。", "提醒");
                                     }
                                     catch (Exception ex)
                                     {
@@ -196,7 +231,6 @@ namespace ChinaLifeTools
 
         #region 2.2关闭代理
 
-
         private void closeProxyButton_Click(object sender, EventArgs e)
         {
             FiddlerUtils.CloseProxy();
@@ -216,7 +250,6 @@ namespace ChinaLifeTools
         #endregion
 
         #region 3.3记住我
-
         private void chkPwd_CheckedChanged(object sender, EventArgs e)
         {
             try
@@ -229,8 +262,13 @@ namespace ChinaLifeTools
             }
         }
 
+        #endregion
 
-
+        #region 3.3更新
+        private void versionLabel_Click(object sender, EventArgs e)
+        {
+            SendInfo(File.ReadAllText(localVersionFilePath));
+        }
         #endregion
 
         #endregion
@@ -343,17 +381,154 @@ namespace ChinaLifeTools
                 cookieSyncTimer.Start();
             }
             catch (Exception ex)
-            {
-            }
+            { }
         }
 
         private void CookieSyncTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             SyncCookie();
         }
+
         #endregion
 
-        #region 5.Others
+        #region 5.定时器,定时查询服务器,是否更新
+
+        void StartUpdateVersionTimer()
+        {
+            try
+            {
+                uptVersionTimer.Interval = 60000;
+                uptVersionTimer.Elapsed += UptVersionTimer_Elapsed; ;
+                uptVersionTimer.Start();
+            }
+            catch (Exception ex)
+            { }
+        }
+
+        private void UptVersionTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            UpdateVersion();
+        }
+
+        #endregion
+
+        #region 6.启动与更新程序socket通信
+
+        void StartUpdateProcessAndStartSocketConnect()
+        {
+            try
+            {
+                if (File.Exists(updateProcessPath))
+                {
+                    /*
+                     * 1.更新程序存在
+                     */
+
+                    //1.启动socket监听
+                    StartUpdateProcessAndStartSocketConnect_StartSocketServer();
+
+                    //2.开启客户端
+                    //Process.Start(updateProcessPath);
+
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        void StartUpdateProcessAndStartSocketConnect_StartSocketServer()
+        {
+            try
+            {
+                Socket socketWatch = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                //获取IP
+                IPAddress ip = IPAddress.Parse("127.0.0.1");
+                IPEndPoint port = new IPEndPoint(ip, Convert.ToInt32("10086"));
+                socketWatch.Bind(port);
+                socketWatch.Listen(100);
+                //新建线程，去接收客户端发来的信息
+                Thread td = new Thread(StartUpdateProcessAndStartSocketConnect_AcceptMgs);
+                td.IsBackground = false;
+                td.Start(socketWatch);
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        /// <summary>
+        /// 接收客户端发送的信息
+        /// </summary>
+        /// <param name="o"></param>
+        private void StartUpdateProcessAndStartSocketConnect_AcceptMgs(object o)
+        {
+            try
+            {
+                Socket socketWatc = (Socket)o;
+                while (true)
+                {
+                    ////负责跟客户端通信的Socket
+                    Socket socketSend = socketWatc.Accept();
+                    clientSocket = socketSend;
+                    //新建线程循环接收客户端发来的信息
+                    Thread td = new Thread(StartUpdateProcessAndStartSocketConnect_Recive);
+                    td.IsBackground = true;
+                    td.Start(clientSocket);
+                }
+            }
+            catch { }
+        }
+
+        private void StartUpdateProcessAndStartSocketConnect_Recive(object o)
+        {
+            Socket socketSend = (Socket)o;
+            try
+            {
+                while (true)
+                {
+                    //客户端连接成功后，服务器应该接受客户端发来的消息
+                    byte[] buffer = new byte[1024 * 1024 * 2];
+                    //实际接受到的有效字节数
+                    int r = socketSend.Receive(buffer);
+                    string strMsg = Encoding.UTF8.GetString(buffer, 0, r);
+                }
+            }
+            catch { }
+        }
+
+        public void SendInfo(String info)
+        {
+            if (clientSocket != null && !String.IsNullOrEmpty(info))
+            {
+                Task.Factory.StartNew(SendMsg, new SocketSendModel(clientSocket, info));
+            }
+        }
+
+        public void SendMsg(Object _socketModel)
+        {
+            try
+            {
+                SocketSendModel socketModel = (SocketSendModel)_socketModel;
+                Socket socketSend = socketModel.socketSend;
+                String strSend = socketModel.strSend;
+                byte[] buffer = Encoding.UTF8.GetBytes(strSend);
+                //获得发送的信息时候，在数组前面加上一个字节 0
+                List<byte> list = new List<byte>();
+                list.AddRange(buffer);
+                //将泛型集合转换为数组
+                byte[] newBuffer = list.ToArray();
+                //将了标识字符的字节数组传递给客户端
+                socketSend.Send(newBuffer);
+            }
+            catch
+            {
+            }
+        }
+
+        #endregion
+
+        #region 7.Others
 
         void SetRichText(String logInfo)
         {
@@ -373,7 +548,6 @@ namespace ChinaLifeTools
 
         string GetUserCodeFilePath()
         {
-            String basePath = System.Environment.CurrentDirectory;
             String filePath = String.Format("{0}\\{1}", basePath, fileName);
             return filePath;
         }
@@ -452,8 +626,179 @@ namespace ChinaLifeTools
             return syncStatus;
         }
 
+        /// <summary>
+        /// 关闭已启动代理工具
+        /// </summary>
+        void CloseSameProcess()
+        {
+            try
+            {
+                var processes = Process.GetProcessesByName("ChinaLifeTools");
+                if (processes != null)
+                {
+                    foreach (var item in processes)
+                    {
+                        if (item.Id != Process.GetCurrentProcess().Id)
+                        {
+                            item.Kill();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
+
+        void UpdateVersion()
+        {
+            try
+            {
+                /**
+                 * 1.获取服务器版本号
+                 * 2.所有文件存储至本地目录
+                 */
+                //如果目录不存在,则重新创建目录
+                if (!Directory.Exists(updateDic))
+                { Directory.CreateDirectory(updateDic); }
+                VersionInfoResponse localVersion = UpdateVersion_GetLocalVersion();
+                VersionInfoResponse serverVersion = UpdateVersion_GetServerVersion();
+                double serverV = UpdateVersion_ConvertVersionVal(serverVersion);
+                double localV = UpdateVersion_ConvertVersionVal(localVersion);
+                if (serverV > localV)
+                {
+                    //如服务器端版本信息大于本地，则从服务端下载最新版本，并更新本地信息
+                    bool downLoadSign = UpdateVersion_DownloadFromServer(serverVersion);
+                    if (downLoadSign)
+                    {
+                        //下载成功后，将最新版本信息更新至本地,并设置为未处理
+                        serverVersion.updateSign = "1";
+                        serverVersion.mainProcessPath = basePath;
+                        serverVersion.mainProcessName = "ChinaLifeTools";
+                        //覆盖到本地，提醒客户更新
+                        File.WriteAllText(localVersionFilePath, JsonConvert.SerializeObject(serverVersion));
+                        this.versionLabel.Text = uptTips;
+                    }
+                }
+                else
+                {
+                    if (localV > 0 && "1".Equals(localVersion.updateSign))
+                    {
+                        this.versionLabel.Text = uptTips;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+        /// <summary>
+        /// 获取本地版本号
+        /// </summary>
+        /// <returns></returns>
+        VersionInfoResponse UpdateVersion_GetLocalVersion()
+        {
+            VersionInfoResponse localVersionInfo = new VersionInfoResponse();
+            try
+            {
+                if (!File.Exists(localVersionFilePath))
+                {
+                    //写入空文件即可
+                    File.WriteAllText(localVersionFilePath, "");
+                    return localVersionInfo;
+                }
+                else
+                {
+                    String versionTxt = File.ReadAllText(localVersionFilePath, Encoding.UTF8);
+                    if (!String.IsNullOrEmpty(versionTxt))
+                    {
+                        localVersionInfo = JsonConvert.DeserializeObject<VersionInfoResponse>(versionTxt);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return localVersionInfo;
+        }
+
+        /// <summary>
+        /// 获取服务端版本号
+        /// </summary>
+        /// <returns></returns>
+        VersionInfoResponse UpdateVersion_GetServerVersion()
+        {
+            VersionInfoResponse serverVersionInfo = new VersionInfoResponse();
+            try
+            {
+                /*
+                 * 1.从服务端查询出版本号信息
+                 */
+                String serverVersionUrl = String.Format("http://localhost:45001/WebTool_Web_war_exploded/file/getLatestVersion.do?versionType=GSCProxyTool");
+                String serverResult = HttpUtils.Get(serverVersionUrl, null);
+                if (!String.IsNullOrEmpty(serverResult))
+                {
+                    serverVersionInfo = JsonConvert.DeserializeObject<VersionInfoResponse>(serverResult);
+                }
+            }
+            catch (Exception ex)
+            { }
+            return serverVersionInfo;
+        }
+
+        /// <summary>
+        /// 转换版本大小
+        /// </summary>
+        /// <param name="versionInfo"></param>
+        /// <returns></returns>
+        double UpdateVersion_ConvertVersionVal(VersionInfoResponse versionInfo)
+        {
+            double versionDouble = 0;
+            try
+            {
+                if (versionInfo != null && versionInfo.data != null && !String.IsNullOrEmpty(versionInfo.data.versionNumber))
+                {
+                    double tmp;
+                    if (double.TryParse(versionInfo.data.versionNumber, out tmp))
+                    {
+                        versionDouble = tmp;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return versionDouble;
+        }
+
+        /// <summary>
+        /// 从服务端下载更新库
+        /// </summary>
+        /// <param name="serverVersionInfo"></param>
+        /// <returns></returns>
+        bool UpdateVersion_DownloadFromServer(VersionInfoResponse serverVersionInfo)
+        {
+            bool downloadSign = false;
+            try
+            {
+                if (serverVersionInfo != null && serverVersionInfo.data != null && serverVersionInfo.data.downLoadUrl != null)
+                {
+                    //从服务端下载
+                    String downloadFilePath = String.Format("{0}\\{1}", updateDic, serverVersionInfo.data.fileName);
+                    HttpUtils.Get_SaveToLocalPath(serverVersionInfo.data.downLoadUrl, null, downloadFilePath);
+                    if (File.Exists(downloadFilePath))
+                    {
+                        serverVersionInfo.downloadFilePath = downloadFilePath;
+                        downloadSign = true;
+                    }
+                }
+            }
+            catch (Exception) { }
+            return downloadSign;
+        }
+
         #endregion
 
     }
-
 }

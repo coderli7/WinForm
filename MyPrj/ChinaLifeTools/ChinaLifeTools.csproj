@@ -15,7 +15,7 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,10 +23,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
+    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -70,11 +70,9 @@
       <DependentUpon>ChinaLifeForm.cs</DependentUpon>
     </Compile>
     <Compile Include="FiddlerUtils\FiddlerUtils.cs" />
-    <Compile Include="Models\FiddlerCacheInfo.cs" />
-    <Compile Include="Models\LoginInfoSyncResponse.cs" />
-    <Compile Include="Models\LoginInfoSyncRequest.cs" />
     <Compile Include="Utils\CommonUse.cs" />
     <Compile Include="Utils\Config.cs" />
+    <Compile Include="Utils\HttpUtils.cs" />
     <Compile Include="WebProxy\Autoclicker.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -115,6 +113,12 @@
     <Content Include="Dlls\FiddlerCore4.dll" />
     <Content Include="Dlls\Newtonsoft.Json.dll" />
     <Content Include="proxy.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common.Models\Common.Models.csproj">
+      <Project>{d9682b8c-5a45-47bc-9001-bb556a649bc0}</Project>
+      <Name>Common.Models</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
