@@ -76,7 +76,7 @@ namespace ChinaLifeTools
                 //循环检测3次关闭状态是否生效如未生效，在执行3次关闭
                 int researchCount = 0;
                 Microsoft.Win32.RegistryKey rsrch_rk = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(proxyRegPath, true);
-                while ("1".Equals(rsrch_rk.GetValue("ProxyEnable").ToString()) && researchCount < 3)
+                while ("1".Equals(rsrch_rk.GetValue("ProxyEnable").ToString()) && researchCount < 2)
                 {
                     SetRegProxyClose(rsrch_rk);
                     researchCount++;

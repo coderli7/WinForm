@@ -113,12 +113,22 @@
     <Content Include="Dlls\FiddlerCore4.dll" />
     <Content Include="Dlls\Newtonsoft.Json.dll" />
     <Content Include="proxy.ico" />
+    <Content Include="update\version.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common.Models\Common.Models.csproj">
       <Project>{d9682b8c-5a45-47bc-9001-bb556a649bc0}</Project>
       <Name>Common.Models</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common.Utils\Common.Utils.csproj">
+      <Project>{59945894-7833-4135-b978-a8f033d4fdc2}</Project>
+      <Name>Common.Utils</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy  "$(SolutionDir)UptService\bin\Debug\*"     "$(TargetDir)update\"</PostBuildEvent>
+  </PropertyGroup>
 </Project>

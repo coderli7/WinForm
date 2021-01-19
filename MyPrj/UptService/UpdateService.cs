@@ -1,4 +1,5 @@
 ﻿using ChinaLifeTools.Models;
+using Common.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -26,7 +27,7 @@ namespace UptService
             ConectSocketServer();
 
             //定时监测，防止关闭
-            chkServerVersionTimer.Interval = 60000;
+            chkServerVersionTimer.Interval = 10000;
             chkServerVersionTimer.Elapsed += ChkServerVersionTimer_Elapsed;
             chkServerVersionTimer.Start();
         }
@@ -37,7 +38,8 @@ namespace UptService
             {
                 lock ("")
                 {
-                    if (socketSend == null)
+                    bool socketStatus = SocketUtils.IsSocketConnected(socketSend);
+                    if (!socketStatus)
                     {
                         ConectSocketServer();
                     }
@@ -85,6 +87,7 @@ namespace UptService
                     int r = socketSend.Receive(buffer);
                     if (r == 0) { break; }
                     string receiveMsg = Encoding.UTF8.GetString(buffer, 0, r);
+                    //MessageBox.Show(String.Format("更新程序收到消息：{0}", receiveMsg), "提醒");
                     UpdateFile(receiveMsg);
                 }
             }
@@ -130,8 +133,8 @@ namespace UptService
 
                         //2.直接解压直新
                         //String depressPath = updateInfo.downloadFilePath.Substring(0, updateInfo.downloadFilePath.LastIndexOf('.'));
-                        bool depressStatus = ZipUtils.Decompression(updateInfo.downloadFilePath, updateInfo.mainProcessPath, true);
-
+                        //bool depressStatus = ZipUtils.Decompression(updateInfo.downloadFilePath, updateInfo.mainProcessPath, true);
+                        bool depressStatus = UpdateFile_CopyFile(updateInfo);
                         if (depressStatus)
                         {
                             File.Delete(updateInfo.downloadFilePath);
@@ -140,18 +143,25 @@ namespace UptService
                             String updateVersionFilePath = String.Format("{0}\\update\\version.txt", updateInfo.mainProcessPath);
                             File.WriteAllText(updateVersionFilePath, JsonConvert.SerializeObject(updateInfo));
                         }
+                        else
+                        {
+                            MessageBox.Show("解压缩失败,请稍后重试");
+                        }
 
 
                         //5.启动文件
-                        String mainProcess = String.Format("{0}\\{1}", updateInfo.mainProcessPath, updateInfo.mainProcessName);
+                        String mainProcess = String.Format("{0}\\{1}.exe", updateInfo.mainProcessPath, updateInfo.mainProcessName);
                         Process.Start(mainProcess);
 
                         //6.可退出更新程序,也可不退出(考虑socket连接不生效)
+                        System.Environment.Exit(0);
                     }
                 }
             }
             catch (Exception ex)
             {
+                MessageBox.Show(String.Format("更新失败,请联系管理员或者重新下载即可!!!:{0}", ex.Message));
+                System.Environment.Exit(0);
             }
         }
 
@@ -174,6 +184,45 @@ namespace UptService
             catch (Exception ex)
             {
             }
+        }
+
+        /// <summary>
+        /// 解压文件,并处理
+        /// </summary>
+        /// <returns></returns>
+        bool UpdateFile_CopyFile(VersionInfoResponse updateInfo)
+        {
+            bool status = false;
+            try
+            {
+                /*
+                 * 1.先解压缩文件到tmp路径
+                 * 2.从tmp路径下读取出非update目录下的文件，拷贝到代理工具执行目录
+                 * 3.删除tmp目录，
+                 */
+                String unRarTmpDic = String.Format(@"{0}\update\tmp", updateInfo.mainProcessPath);
+                if (!Directory.Exists(unRarTmpDic))
+                { Directory.CreateDirectory(unRarTmpDic); }
+                RarOrZipUtils.UnpackFileRarOrZip(updateInfo.downloadFilePath, unRarTmpDic);
+
+                var files = Directory.GetFiles(unRarTmpDic);
+                foreach (var item in files)
+                {
+                    FileInfo fInfo = new FileInfo(item);
+                    String desFilePath = String.Format(@"{0}\{1}", updateInfo.mainProcessPath, fInfo.Name);
+                    fInfo.CopyTo(desFilePath, true);
+                    fInfo.Delete();
+                }
+                Directory.Delete(unRarTmpDic, true);
+                File.Delete(updateInfo.downloadFilePath);
+
+                status = true;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return status;
         }
 
         #endregion

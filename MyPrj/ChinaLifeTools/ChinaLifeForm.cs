@@ -2,6 +2,7 @@
 using ChinaLifeTools.models;
 using ChinaLifeTools.Models;
 using ChinaLifeTools.Utils;
+using Common.Utils;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -34,30 +35,39 @@ namespace ChinaLifeTools
 
         private void ChinaLifeForm_Load(object sender, EventArgs e)
         {
-            Task.Factory.StartNew(() =>
+            try
             {
-                UpdateVersion();
-            });
-            CloseSameProcess();
-            MessageBox.Show("请注意!!! 使用代理工具期间,尽量关闭安全软件哦！（如360安全卫士，防火墙等）", "提醒");
-            this.usernameTxt.Text = Config.UserName;
-            if (String.IsNullOrEmpty(Config.UserName))
-            {
-                try
+                Task.Factory.StartNew(() =>
                 {
-                    String filePath = GetUserCodeFilePath();
-                    if (File.Exists(filePath))
+                    UpdateVersion();
+                });
+
+                //系统初始化,关闭代理
+                FiddlerUtils.CloseProxy();
+                CloseSameProcess();
+                MessageBox.Show("请注意!!! 使用代理工具期间,尽量关闭安全软件哦！（如360安全卫士，防火墙等）", "提醒");
+                this.usernameTxt.Text = Config.UserName;
+                if (String.IsNullOrEmpty(Config.UserName))
+                {
+                    try
                     {
-                        this.usernameTxt.Text = File.ReadAllText(filePath);
+                        String filePath = GetUserCodeFilePath();
+                        if (File.Exists(filePath))
+                        {
+                            this.usernameTxt.Text = File.ReadAllText(filePath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
                     }
                 }
-                catch (Exception ex)
-                {
-                }
+                StartSyncCookieTimer();
+                StartUpdateVersionTimer();
+                StartUpdateProcessAndStartSocketConnect();
             }
-            StartSyncCookieTimer();
-            StartUpdateVersionTimer();
-            StartUpdateProcessAndStartSocketConnect();
+            catch (Exception ex)
+            {
+            }
         }
 
         #endregion
@@ -83,8 +93,6 @@ namespace ChinaLifeTools
         /// </summary>
         System.Timers.Timer uptVersionTimer = new System.Timers.Timer();
 
-        StringBuilder localSetCookieSb = new StringBuilder();
-
         string fileName = "usrcode.txt";
 
         Object lockObj = new object();
@@ -100,12 +108,7 @@ namespace ChinaLifeTools
         /// <summary>
         /// 更新程序是否存在并启动着
         /// </summary>
-        //static String updateProcessPath = String.Format("{0}\\UptService.exe", basePath);
-
-        //D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug
-
-        static String updateProcessPath = String.Format("{0}\\UptService.exe", @"D:\01.GitHub\WinForm\MyPrj\UptService\bin\Debug");
-
+        static String updateProcessPath = String.Format("{0}\\UptService.exe", updateDic);
 
         Socket clientSocket;
 
@@ -135,7 +138,7 @@ namespace ChinaLifeTools
                         bool syncCookieStatus = SyncCookie();
                         if (syncCookieStatus)
                         {
-                            MessageBox.Show("代理已更新,请 CTRL+F5 刷新页面哦!", "提醒");
+                            MessageBox.Show("代理已更新,请执行 CTRL+F5 刷新页面哦!", "提醒");
                         }
                         else
                         {
@@ -169,7 +172,7 @@ namespace ChinaLifeTools
                                         Fiddler.FiddlerApplication.BeforeRequest += FiddlerApplication_BeforeRequest;
                                         Fiddler.FiddlerApplication.BeforeResponse += FiddlerApplication_BeforeResponse;
                                         BiHu.BaoXian.ClassCommon.WebProxy.Start(8899);
-                                        MessageBox.Show("代理已启动!!! \r\n\r\n请执行以下步骤 ( 建议使用Chrome浏览器 ^_^ ) ：\r\n\r\n\r\n1.打开浏览器。\r\n\r\n2.执行 Ctrl + Shift + Delete  清空缓存。\r\n\r\n3.重启浏览器,直接进入核心系统首页即可。", "提醒");
+                                        MessageBox.Show("代理已启动!!! \r\n\r\n\r\n请执行以下步骤 ( 建议使用Chrome浏览器 ^_^ ) ：\r\n\r\n\r\n1.打开浏览器。\r\n\r\n2.执行 Ctrl + Shift + Delete  清空缓存。\r\n\r\n3.重启浏览器,直接进入核心系统首页即可。", "提醒");
                                     }
                                     catch (Exception ex)
                                     {
@@ -235,16 +238,19 @@ namespace ChinaLifeTools
         {
             FiddlerUtils.CloseProxy();
             MessageBox.Show("代理已关闭!\r\n\r\n如代理仍未关闭，请手动取消系统代理即可!", "提醒");
+            CloseUpdateProcess();
             System.Environment.Exit(0);
         }
 
         private void ChinaLifeForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            FiddlerUtils.CloseProxy();
+            CloseUpdateProcess();
+            System.Environment.Exit(0);
         }
 
         private void ChinaLifeForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            CloseUpdateProcess();
             FiddlerUtils.CloseProxy();
         }
         #endregion
@@ -273,7 +279,7 @@ namespace ChinaLifeTools
 
         #endregion
 
-        #region 3.BeforeRequest&BeforeResponse
+        #region 3.Fildder代理-BeforeRequest&BeforeResponse
 
         public void FiddlerApplication_BeforeRequest(Fiddler.Session oSession)
         {
@@ -310,7 +316,7 @@ namespace ChinaLifeTools
                                     if (requestItem.Value.Contains("AlteonP73workbench"))
                                     {
                                         CookieModel.CookieDic[requestItem.Key] = requestItem.Value;
-                                        SetRichText(String.Format("fiddler 键值对需要更新:{0}={1}", requestItem.Key, requestItem.Value));
+                                        Log(String.Format("fiddler 键值对需要更新:{0}={1}", requestItem.Key, requestItem.Value));
                                         changeCookieSign++;
                                     }
                                 }
@@ -325,7 +331,7 @@ namespace ChinaLifeTools
                             else
                             {
                                 CookieModel.CookieDic.Add(requestItem.Key, requestItem.Value);
-                                SetRichText(String.Format("fiddler 键值对需要新增:{0}={1}", requestItem.Key, requestItem.Value));
+                                Log(String.Format("fiddler 键值对需要新增:{0}={1}", requestItem.Key, requestItem.Value));
                                 changeCookieSign++;
                             }
                         }
@@ -341,13 +347,13 @@ namespace ChinaLifeTools
                             if (!String.IsNullOrEmpty(newCookieStr))
                             {
                                 CookieModel = new FiddlerCacheInfo(newCookieStr);
-                                SetRichText(String.Format("fiddler更新Cookie为:{0}", newCookieStr));
+                                Log(String.Format("fiddler更新Cookie为:{0}", newCookieStr));
                             }
                         }
                         #endregion
 
                         oSession.oRequest.headers["Cookie"] = CookieModel.CookieStr;
-                        SetRichText(String.Format("fiddler修改了请求:{0}", oSession.fullUrl.ToString()));
+                        Log(String.Format("fiddler修改了请求:{0}", oSession.fullUrl.ToString()));
                     }
                 }
                 catch (Exception ex)
@@ -381,7 +387,9 @@ namespace ChinaLifeTools
                 cookieSyncTimer.Start();
             }
             catch (Exception ex)
-            { }
+            {
+
+            }
         }
 
         private void CookieSyncTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
@@ -391,13 +399,13 @@ namespace ChinaLifeTools
 
         #endregion
 
-        #region 5.定时器,定时查询服务器,是否更新
+        #region 5.定时器,定时查询服务器版本
 
         void StartUpdateVersionTimer()
         {
             try
             {
-                uptVersionTimer.Interval = 60000;
+                uptVersionTimer.Interval = 20000;
                 uptVersionTimer.Elapsed += UptVersionTimer_Elapsed; ;
                 uptVersionTimer.Start();
             }
@@ -418,23 +426,13 @@ namespace ChinaLifeTools
         {
             try
             {
-                if (File.Exists(updateProcessPath))
-                {
-                    /*
-                     * 1.更新程序存在
-                     */
+                //1.启动socket监听
+                StartUpdateProcessAndStartSocketConnect_StartSocketServer();
 
-                    //1.启动socket监听
-                    StartUpdateProcessAndStartSocketConnect_StartSocketServer();
-
-                    //2.开启客户端
-                    //Process.Start(updateProcessPath);
-
-                }
+                //2.启动更新程序客户端
+                if (File.Exists(updateProcessPath)) { Process.Start(updateProcessPath); }
             }
-            catch (Exception ex)
-            {
-            }
+            catch (Exception ex) { }
         }
 
         void StartUpdateProcessAndStartSocketConnect_StartSocketServer()
@@ -453,8 +451,7 @@ namespace ChinaLifeTools
                 td.Start(socketWatch);
             }
             catch (Exception ex)
-            {
-            }
+            { }
         }
 
         /// <summary>
@@ -499,7 +496,12 @@ namespace ChinaLifeTools
 
         public void SendInfo(String info)
         {
-            if (clientSocket != null && !String.IsNullOrEmpty(info))
+            bool socketStatus = SocketUtils.IsSocketConnected(clientSocket);
+            if (!socketStatus)
+            {
+                MessageBox.Show("更新服务未启动，请重启代理工具");
+            }
+            if (!String.IsNullOrEmpty(info))
             {
                 Task.Factory.StartNew(SendMsg, new SocketSendModel(clientSocket, info));
             }
@@ -530,9 +532,8 @@ namespace ChinaLifeTools
 
         #region 7.Others
 
-        void SetRichText(String logInfo)
+        void Log(String logInfo)
         {
-
             String curLogTxt = this.logTxt.Text.ToString();
             if (!String.IsNullOrEmpty(curLogTxt) && curLogTxt.Length > 5000)
             {
@@ -542,6 +543,7 @@ namespace ChinaLifeTools
 
             if (!String.IsNullOrEmpty(logInfo))
             {
+                logInfo = String.Format("{0} {1}", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), logInfo);
                 this.logTxt.Text = String.Format("{0}\r\n{1}", curLogTxt, logInfo);
             }
         }
@@ -594,7 +596,7 @@ namespace ChinaLifeTools
             }
             catch (Exception ex)
             {
-                SetRichText(ex.Message);
+                Log(ex.Message);
             }
         }
 
@@ -649,6 +651,23 @@ namespace ChinaLifeTools
             {
             }
         }
+        void CloseUpdateProcess()
+        {
+            try
+            {
+                var processes = Process.GetProcessesByName("UptService");
+                if (processes != null)
+                {
+                    foreach (var item in processes)
+                    {
+                        item.Kill();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
 
         void UpdateVersion()
         {
@@ -665,6 +684,7 @@ namespace ChinaLifeTools
                 VersionInfoResponse serverVersion = UpdateVersion_GetServerVersion();
                 double serverV = UpdateVersion_ConvertVersionVal(serverVersion);
                 double localV = UpdateVersion_ConvertVersionVal(localVersion);
+                Log(String.Format("服务器版本为:{0},本地版本为:{1}", serverV, localV));
                 if (serverV > localV)
                 {
                     //如服务器端版本信息大于本地，则从服务端下载最新版本，并更新本地信息
@@ -682,13 +702,22 @@ namespace ChinaLifeTools
                 }
                 else
                 {
-                    if (localV > 0 && "1".Equals(localVersion.updateSign))
+                    if (localV > 0)
                     {
-                        this.versionLabel.Text = uptTips;
+                        if ("1".Equals(localVersion.updateSign))
+                        {
+                            this.versionLabel.Text = uptTips;
+                        }
+                        else if ("0".Equals(localVersion.updateSign))
+                        {
+                            //清除提示
+                            Log("清除版本号提醒");
+                            this.versionLabel.Text = "";
+                        }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
             }
         }
@@ -735,7 +764,7 @@ namespace ChinaLifeTools
                 /*
                  * 1.从服务端查询出版本号信息
                  */
-                String serverVersionUrl = String.Format("http://localhost:45001/WebTool_Web_war_exploded/file/getLatestVersion.do?versionType=GSCProxyTool");
+                String serverVersionUrl = Config.ServerVersionUrl;
                 String serverResult = HttpUtils.Get(serverVersionUrl, null);
                 if (!String.IsNullOrEmpty(serverResult))
                 {

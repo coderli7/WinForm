@@ -38,6 +38,18 @@ namespace ChinaLifeTools.Utils
             }
         }
 
+        public static String ServerVersionUrl
+        {
+            get
+            {
+                String confDefault = "http://111.198.29.209:35001/webtool/file/getLatestVersion.do?versionType=GSCProxyTool";
+                if (!String.IsNullOrEmpty(ConfigurationManager.AppSettings["ServerVersionUrl"]))
+                {
+                    confDefault = ConfigurationManager.AppSettings["ServerVersionUrl"];
+                }
+                return confDefault;
+            }
+        }
 
     }
 }
