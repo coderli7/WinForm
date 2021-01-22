@@ -5,3 +5,4 @@ D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.csproj.CoreCompil
 D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.csproj.CopyComplete
 D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.dll
 D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.pdb
+D:\01.GitHub\WinForm\MyPrj\Common.Utils\obj\Debug\Common.Utils.csprojAssemblyReference.cache

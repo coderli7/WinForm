@@ -7,4 +7,3 @@ D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.csproj.GenerateRe
 D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.csproj.CoreCompileInputs.cache
 D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.exe
 D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.pdb
-D:\01.GitHub\WinForm\MyPrj\KeepVPNTools\obj\Debug\KeepVPNTools.csprojAssemblyReference.cache

@@ -3,6 +3,7 @@ using ChinaLifeTools.models;
 using ChinaLifeTools.Models;
 using ChinaLifeTools.Utils;
 using Common.Utils;
+using Fiddler;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -37,13 +38,9 @@ namespace ChinaLifeTools
         {
             try
             {
-                Task.Factory.StartNew(() =>
-                {
-                    UpdateVersion();
-                });
-
                 //系统初始化,关闭代理
                 FiddlerUtils.CloseProxy();
+                Task.Factory.StartNew(() => { UpdateVersion(); });
                 CloseSameProcess();
                 MessageBox.Show("请注意!!! 使用代理工具期间,尽量关闭安全软件哦！（如360安全卫士，防火墙等）", "提醒");
                 this.usernameTxt.Text = Config.UserName;
@@ -95,7 +92,10 @@ namespace ChinaLifeTools
 
         string fileName = "usrcode.txt";
 
-        Object lockObj = new object();
+        /// <summary>
+        /// fiddler锁
+        /// </summary>
+        Object fiddlerLockObj = new object();
 
         static String basePath = System.Environment.CurrentDirectory;
 
@@ -283,95 +283,108 @@ namespace ChinaLifeTools
 
         public void FiddlerApplication_BeforeRequest(Fiddler.Session oSession)
         {
-            lock (lockObj)
+            lock (fiddlerLockObj)
             {
                 try
                 {
-                    if (!SaveCookieSign) { return; }
-                    if (!oSession.fullUrl.StartsWith(String.Format("https://{0}", ProxyUrl)) && !oSession.fullUrl.StartsWith(String.Format("http://{0}", ProxyUrl))) { return; }
-                    //#region 测试人保
-                    //if (!oSession.fullUrl.Contains("157.122.153.67")) { return; }
-                    //#endregion
-
-                    if (oSession.fullUrl.Equals("https://ins.chinalife-p.com.cn/workbench/workbench/login.html"))
+                    if (CheckFilterRule(oSession))
                     {
-                        oSession.fullUrl = "https://ins.chinalife-p.com.cn/workbench/workbench/index.html";
-                    }
-                    String cookieRequestStr = oSession.oRequest.headers["Cookie"].ToString();
-                    if (String.IsNullOrEmpty(cookieRequestStr)) { return; }
-                    FiddlerCacheInfo cookieRequestModel = new FiddlerCacheInfo(cookieRequestStr);
-                    if (CookieModel != null)
-                    {
-                        if (CookieModel.CookieStr.Equals(cookieRequestModel.CookieStr)) { return; }
-                        //if (oSession.oRequest.headers["Cookie"] != null) { oSession.oRequest.headers.Remove("Cookie"); }
+                        oSession.bBufferResponse = true;
 
-                        #region 更新cookie,不能完全替换
-                        int changeCookieSign = 0;
-                        foreach (var requestItem in cookieRequestModel.CookieDic)
+                        #region 人寿替换请求
+                        if (oSession.fullUrl.Equals("https://ins.chinalife-p.com.cn/workbench/workbench/login.html"))
+                        { oSession.fullUrl = "https://ins.chinalife-p.com.cn/workbench/workbench/index.html"; }
+                        #endregion
+
+                        String requestCookie = oSession.oRequest.headers["Cookie"].ToString();
+                        FiddlerCacheInfo cookieRequestModel = new FiddlerCacheInfo(requestCookie);
+                        if (CookieModel != null)
                         {
-                            if (CookieModel.CookieDic.ContainsKey(requestItem.Key) && !String.IsNullOrEmpty(requestItem.Value))
+                            //如果全部相等
+                            //if (CookieModel.CookieStr.Equals(cookieRequestModel.CookieStr)) { return; }
+                            #region 更新cookie,不能完全替换
+                            int changeCookieSign = 0;
+                            foreach (var requestItem in cookieRequestModel.CookieDic)
                             {
-                                if (ProxyUrl.Contains("ins.chinalife-p.com.cn"))
+                                if (CookieModel.CookieDic.ContainsKey(requestItem.Key) && !String.IsNullOrEmpty(requestItem.Value))
                                 {
-                                    if (requestItem.Value.Contains("AlteonP73workbench"))
+                                    if (ProxyUrl.Contains("ins.chinalife-p.com.cn"))
                                     {
-                                        CookieModel.CookieDic[requestItem.Key] = requestItem.Value;
-                                        Log(String.Format("fiddler 键值对需要更新:{0}={1}", requestItem.Key, requestItem.Value));
+                                        if (requestItem.Value.Contains("AlteonP73workbench"))
+                                        {
+                                            CookieModel.CookieDic[requestItem.Key] = requestItem.Value;
+                                            Log(String.Format("fiddler 键值对需要更新:{0}={1}", requestItem.Key, requestItem.Value));
+                                            changeCookieSign++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //CookieModel.CookieDic[requestItem.Key] = requestItem.Value;
+                                        //SetRichText(String.Format("fiddler 键值对需要更新:{0}={1}", requestItem.Key, requestItem.Value));
+                                        //标记需要更新
                                         changeCookieSign++;
                                     }
                                 }
                                 else
                                 {
-                                    //CookieModel.CookieDic[requestItem.Key] = requestItem.Value;
-                                    //SetRichText(String.Format("fiddler 键值对需要更新:{0}={1}", requestItem.Key, requestItem.Value));
-                                    //标记需要更新
+                                    CookieModel.CookieDic.Add(requestItem.Key, requestItem.Value);
+                                    Log(String.Format("fiddler 键值对需要新增:{0}={1}", requestItem.Key, requestItem.Value));
                                     changeCookieSign++;
                                 }
                             }
-                            else
+                            if (changeCookieSign > 0)
                             {
-                                CookieModel.CookieDic.Add(requestItem.Key, requestItem.Value);
-                                Log(String.Format("fiddler 键值对需要新增:{0}={1}", requestItem.Key, requestItem.Value));
-                                changeCookieSign++;
+                                //生成新的cookieSb
+                                StringBuilder newCookieSb = new StringBuilder();
+                                foreach (var item in CookieModel.CookieDic)
+                                {
+                                    newCookieSb.Append(String.Format(";{0}={1}", item.Key, item.Value));
+                                }
+                                String newCookieStr = newCookieSb.ToString().Trim(new char[] { ';' }).Trim();
+                                if (!String.IsNullOrEmpty(newCookieStr))
+                                {
+                                    CookieModel = new FiddlerCacheInfo(newCookieStr);
+                                    Log(String.Format("fiddler更新Cookie为:{0}", newCookieStr));
+                                }
                             }
+                            #endregion
+                            if (!oSession.oRequest.headers.Exists("Cookie")) { oSession.oRequest.headers.Add("Cookie", ""); }
+                            oSession.oRequest.headers["Cookie"] = CookieModel.CookieStr;
+                            Log(String.Format("fiddler修改了请求:{0}", oSession.fullUrl.ToString()));
                         }
-                        if (changeCookieSign > 0)
-                        {
-                            //生成新的cookieSb
-                            StringBuilder newCookieSb = new StringBuilder();
-                            foreach (var item in CookieModel.CookieDic)
-                            {
-                                newCookieSb.Append(String.Format(";{0}={1}", item.Key, item.Value));
-                            }
-                            String newCookieStr = newCookieSb.ToString().Trim(new char[] { ';' }).Trim();
-                            if (!String.IsNullOrEmpty(newCookieStr))
-                            {
-                                CookieModel = new FiddlerCacheInfo(newCookieStr);
-                                Log(String.Format("fiddler更新Cookie为:{0}", newCookieStr));
-                            }
-                        }
-                        #endregion
-
-                        oSession.oRequest.headers["Cookie"] = CookieModel.CookieStr;
-                        Log(String.Format("fiddler修改了请求:{0}", oSession.fullUrl.ToString()));
                     }
                 }
                 catch (Exception ex)
-                {
-                    MessageBox.Show(String.Format("BeforeRequest异常:" + ex.Message));
-                }
+                { MessageBox.Show(String.Format("BeforeRequest异常:" + ex.Message)); }
             }
         }
 
         public void FiddlerApplication_BeforeResponse(Fiddler.Session oSession)
         {
-            try
+            lock (fiddlerLockObj)
             {
+                try
+                {
+                    String url = oSession.fullUrl;
+                    if (CheckFilterRule(oSession))
+                    {
+                        String cookieRequestVal = oSession.oRequest.headers["Cookie"];
+                    }
+                }
+                catch (Exception ex)
+                { MessageBox.Show(String.Format("BeforeResponse异常:" + ex.Message)); }
             }
-            catch (Exception ex)
+        }
+
+        public bool CheckFilterRule(Fiddler.Session oSession)
+        {
+            //默认不过滤,符合条件数据才过滤
+            bool filterSign = false;
+            if (SaveCookieSign && (oSession.fullUrl.StartsWith(String.Format("https://{0}", ProxyUrl)) || oSession.fullUrl.StartsWith(String.Format("http://{0}", ProxyUrl))))
             {
-                MessageBox.Show(String.Format("BeforeResponse异常:" + ex.Message));
+                filterSign = true;
             }
+            return filterSign;
         }
 
         #endregion
