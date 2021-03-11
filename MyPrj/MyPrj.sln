@@ -77,6 +77,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Models", "Common.Mod
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Utils", "Common.Utils\Common.Utils.csproj", "{59945894-7833-4135-B978-A8F033D4FDC2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VPNTool", "VPNTool\VPNTool.csproj", "{8B1CC675-EE5C-4AB5-9C1B-FAE23D9E0452}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -211,6 +213,10 @@ Global
 		{59945894-7833-4135-B978-A8F033D4FDC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59945894-7833-4135-B978-A8F033D4FDC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59945894-7833-4135-B978-A8F033D4FDC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B1CC675-EE5C-4AB5-9C1B-FAE23D9E0452}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B1CC675-EE5C-4AB5-9C1B-FAE23D9E0452}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B1CC675-EE5C-4AB5-9C1B-FAE23D9E0452}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B1CC675-EE5C-4AB5-9C1B-FAE23D9E0452}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -230,6 +236,7 @@ Global
 		{F85D1D1C-3F68-457A-BED5-89C3DADE744E} = {D00629A7-10BA-4523-BE7C-80F93261E76C}
 		{D9682B8C-5A45-47BC-9001-BB556A649BC0} = {F85D1D1C-3F68-457A-BED5-89C3DADE744E}
 		{59945894-7833-4135-B978-A8F033D4FDC2} = {F85D1D1C-3F68-457A-BED5-89C3DADE744E}
+		{8B1CC675-EE5C-4AB5-9C1B-FAE23D9E0452} = {34A228EB-5799-417C-AC9C-C617C7740C58}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {023BF88B-016C-4CBE-8864-254C0BC44007}
